@@ -35,12 +35,7 @@
                 android:padding="24dp"
                 android:gravity="center">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="👤"
-                    android:textSize="48sp"
-                    android:layout_marginBottom="16dp"/>
+
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -49,6 +44,12 @@
                     android:textSize="14sp"
                     android:textColor="?android:attr/textColorSecondary"
                     android:layout_marginBottom="4dp"/>
+
+                <ImageView
+                    android:id="@+id/imageView2"
+                    android:layout_width="246dp"
+                    android:layout_height="204dp"
+                    card_view:srcCompat="@drawable/kitten" />
 
                 <TextView
                     android:id="@+id/tvUsername"
@@ -71,8 +72,9 @@
 
                 <Button
                     android:id="@+id/btnLogout"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="153dp"
+                    android:layout_height="45dp"
                     android:backgroundTint="#D32F2F"
                     android:text="Выйти"
                     android:textColor="#FFFFFF"
