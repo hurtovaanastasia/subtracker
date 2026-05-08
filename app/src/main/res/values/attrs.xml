@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="colorBackground" format="reference" />
+    <attr name="colorSurface" format="reference" />
+    <attr name="colorSurfaceVariant" format="reference" />
+</resources>

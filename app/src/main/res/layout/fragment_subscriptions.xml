@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,13 +15,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Мои подписки"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:textStyle="bold"
+            android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="16dp"/>
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:scrollbars="vertical">
 
             <LinearLayout
                 android:id="@+id/llSubscriptions"
@@ -38,6 +42,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        android:tint="@android:color/white" />
+        android:tint="@android:color/white"
+        app:backgroundTint="?attr/colorPrimary" />
 
 </FrameLayout>

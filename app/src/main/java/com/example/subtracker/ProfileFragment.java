@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
 public class ProfileFragment extends Fragment {
@@ -40,6 +41,22 @@ public class ProfileFragment extends Fragment {
             }
         });
 
+        Button btnThemeToggle = view.findViewById(R.id.btnThemeToggle);
+
+// Определяем текущую тему
+        int currentNightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDark = currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        btnThemeToggle.setText(isDark ? "☀️ Светлая тема" : "🌙 Тёмная тема");
+
+        btnThemeToggle.setOnClickListener(v -> {
+            if (isDark) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+            // Пересоздаём активность для применения темы
+            getActivity().recreate();
+        });
         return view;
     }
 }

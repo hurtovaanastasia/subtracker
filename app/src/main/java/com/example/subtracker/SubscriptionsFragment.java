@@ -1,6 +1,7 @@
 package com.example.subtracker;
 
 import android.app.AlertDialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,16 @@ public class SubscriptionsFragment extends Fragment {
     private String currentUser;
     private List<Service> servicesList = new ArrayList<>();
     private List<String> serviceNames = new ArrayList<>();
+
+    // Храним выбранную иконку для своего сервиса
+    private String selectedCustomIcon = "📱";
+
+    // Список доступных смайликов
+    private String[] availableIcons = {
+            "📱", "🎬", "🎵", "📺", "🌟", "🍿", "🍎", "🎥", "✈️", "✨", "📦",
+            "💳", "🏦", "💙", "⚽", "🎭", "🚀", "📽️", "🎮", "🕹️", "👾",
+            "🎙️", "🤖", "🎨", "📐", "✏️", "📓", "☁️", "🔍", "💻", "📚", "🏋️", "🍔"
+    };
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -58,7 +69,7 @@ public class SubscriptionsFragment extends Fragment {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     servicesList.clear();
                     serviceNames.clear();
-                    serviceNames.add("--- Ввести свой вариант ---");
+                    serviceNames.add("Выберите сервис");
                     servicesList.add(null);
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
@@ -94,14 +105,14 @@ public class SubscriptionsFragment extends Fragment {
         Spinner spinnerPeriodicity = view.findViewById(R.id.dialogSpinnerPeriodicity);
         Button btnCancel = view.findViewById(R.id.dialogBtnCancel);
         Button btnSave = view.findViewById(R.id.dialogBtnSave);
-        AlertDialog dialog = builder.create();
-        dialog.getWindow().setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
+        Button btnChooseIcon = view.findViewById(R.id.btnChooseIcon);
+        TextView tvSelectedIcon = view.findViewById(R.id.tvSelectedIcon);
 
-        dialog.show();
-        // Устанавливаем сегодняшнюю дату в DatePicker по умолчанию
+        // Сбрасываем выбранную иконку
+        selectedCustomIcon = "📱";
+        tvSelectedIcon.setText(selectedCustomIcon);
+
+        // Устанавливаем сегодняшнюю дату
         Calendar today = Calendar.getInstance();
         datePicker.updateDate(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
 
@@ -117,15 +128,25 @@ public class SubscriptionsFragment extends Fragment {
         ArrayAdapter<String> periodAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, periods);
         spinnerPeriodicity.setAdapter(periodAdapter);
 
-        
+        AlertDialog dialog = builder.create();
 
-        // При выборе сервиса подставляем сумму по умолчанию
+        // При выборе сервиса подставляем сумму и показываем/скрываем выбор иконки
         spinnerService.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
-                if (position > 0 && servicesList.get(position) != null && etAmount.getText().toString().isEmpty()) {
+                if (position == 0) {
+                    // Свой вариант - показываем выбор иконки
+                    btnChooseIcon.setVisibility(View.VISIBLE);
+                    tvSelectedIcon.setVisibility(View.VISIBLE);
+                    if (etAmount.getText().toString().isEmpty()) {
+                        etAmount.setText("");
+                    }
+                } else {
+                    // Выбран сервис из базы - скрываем выбор иконки
+                    btnChooseIcon.setVisibility(View.GONE);
+                    tvSelectedIcon.setVisibility(View.GONE);
                     Service selected = servicesList.get(position);
-                    if (selected.getDefaultAmount() != null) {
+                    if (selected.getDefaultAmount() != null && etAmount.getText().toString().isEmpty()) {
                         etAmount.setText(String.valueOf(selected.getDefaultAmount().intValue()));
                     }
                 }
@@ -134,15 +155,18 @@ public class SubscriptionsFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
+        // Кнопка выбора иконки
+        btnChooseIcon.setOnClickListener(v -> showIconPickerDialog(tvSelectedIcon));
+
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnSave.setOnClickListener(v -> {
             String name;
             double amount;
+            String icon;
 
-            // Получаем дату из DatePicker
             int day = datePicker.getDayOfMonth();
-            int month = datePicker.getMonth() + 1; // Month в DatePicker от 0 до 11
+            int month = datePicker.getMonth() + 1;
             int year = datePicker.getYear();
             String startDate = day + "." + month + "." + year;
 
@@ -151,14 +175,17 @@ public class SubscriptionsFragment extends Fragment {
 
             int selectedServicePos = spinnerService.getSelectedItemPosition();
             if (selectedServicePos == 0) {
+                // Свой вариант
                 name = etCustomName.getText().toString().trim();
                 if (name.isEmpty()) {
                     Toast.makeText(getContext(), "Введите название сервиса", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                icon = selectedCustomIcon;
             } else {
                 Service selected = servicesList.get(selectedServicePos);
                 name = selected.getName();
+                icon = selected.getIcon();
             }
 
             String amountStr = etAmount.getText().toString().trim();
@@ -168,23 +195,47 @@ public class SubscriptionsFragment extends Fragment {
             }
             amount = Double.parseDouble(amountStr);
 
-            addSubscription(name, amount, startDate, periodicity);
+            addSubscription(name, amount, startDate, periodicity, icon);
             dialog.dismiss();
         });
 
         dialog.show();
     }
 
-    private void addSubscription(String name, double amount, String startDate, String periodicity) {
+    private void showIconPickerDialog(TextView tvSelectedIcon) {
+        if (getContext() == null) return;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_choose_icon, null);
+        builder.setView(view);
+
+        GridView gridView = view.findViewById(R.id.gridIcons);
+        Button btnConfirm = view.findViewById(R.id.btnConfirmIcon);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, availableIcons);
+        gridView.setAdapter(adapter);
+
+        AlertDialog dialog = builder.create();
+
+        gridView.setOnItemClickListener((parent, v, position, id) -> {
+            selectedCustomIcon = availableIcons[position];
+            tvSelectedIcon.setText(selectedCustomIcon);
+            dialog.dismiss();
+        });
+
+        btnConfirm.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void addSubscription(String name, double amount, String startDate, String periodicity, String icon) {
         Map<String, Object> subscription = new HashMap<>();
         subscription.put("name", name);
         subscription.put("amount", amount);
         subscription.put("startDate", startDate);
         subscription.put("periodicity", periodicity);
-
-        // Рассчитываем следующую дату платежа
-        String nextPaymentDate = calculateNextPaymentDate(startDate, periodicity);
-        subscription.put("nextPaymentDate", nextPaymentDate);
+        subscription.put("nextPaymentDate", startDate);
+        subscription.put("icon", icon);
 
         db.collection("users")
                 .document(currentUser)
@@ -195,30 +246,6 @@ public class SubscriptionsFragment extends Fragment {
                     loadSubscriptions();
                 })
                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-    }
-
-    private String calculateNextPaymentDate(String startDate, String periodicity) {
-        try {
-            String[] parts = startDate.split("\\.");
-            int day = Integer.parseInt(parts[0]);
-            int month = Integer.parseInt(parts[1]) - 1;
-            int year = Integer.parseInt(parts[2]);
-
-            Calendar cal = Calendar.getInstance();
-            cal.set(year, month, day);
-
-            if ("monthly".equals(periodicity)) {
-                cal.add(Calendar.MONTH, 1);
-            } else if ("quarterly".equals(periodicity)) {
-                cal.add(Calendar.MONTH, 3);
-            } else if ("yearly".equals(periodicity)) {
-                cal.add(Calendar.YEAR, 1);
-            }
-
-            return cal.get(Calendar.DAY_OF_MONTH) + "." + (cal.get(Calendar.MONTH) + 1) + "." + cal.get(Calendar.YEAR);
-        } catch (Exception e) {
-            return startDate;
-        }
     }
 
     private void loadSubscriptions() {
@@ -233,7 +260,9 @@ public class SubscriptionsFragment extends Fragment {
                     if (queryDocumentSnapshots.isEmpty()) {
                         TextView empty = new TextView(getContext());
                         empty.setText("Нет подписок. Нажмите + чтобы добавить.");
-                        empty.setPadding(16, 16, 16, 16);
+                        empty.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                        empty.setPadding(16, 50, 16, 16);
+                        empty.setTextColor(Color.GRAY);
                         llSubscriptions.addView(empty);
                         return;
                     }
@@ -242,29 +271,50 @@ public class SubscriptionsFragment extends Fragment {
                         String id = doc.getId();
                         String name = doc.getString("name");
                         Double amount = doc.getDouble("amount");
-                        String startDate = doc.getString("startDate");
                         String periodicity = doc.getString("periodicity");
                         String nextPaymentDate = doc.getString("nextPaymentDate");
+                        String icon = doc.getString("icon");
+
+                        if (icon == null || icon.isEmpty()) {
+                            icon = getIconForService(name);
+                        }
 
                         String periodText = "";
                         if ("monthly".equals(periodicity)) periodText = "ежемесячно";
                         else if ("quarterly".equals(periodicity)) periodText = "раз в 3 мес";
                         else if ("yearly".equals(periodicity)) periodText = "ежегодно";
 
-                        TextView subView = new TextView(getContext());
-                        subView.setText(name + " - " + amount + "₽ (" + periodText + ")\nСлед. платёж: " + nextPaymentDate);
-                        subView.setPadding(16, 16, 16, 16);
-                        subView.setTextSize(14);
-                        subView.setBackgroundResource(android.R.drawable.list_selector_background);
+                        View itemView = LayoutInflater.from(getContext()).inflate(R.layout.item_subscription, null);
 
-                        subView.setOnLongClickListener(v -> {
+                        TextView itemIcon = itemView.findViewById(R.id.itemIcon);
+                        TextView itemName = itemView.findViewById(R.id.itemName);
+                        TextView itemPeriod = itemView.findViewById(R.id.itemPeriod);
+                        TextView itemAmount = itemView.findViewById(R.id.itemAmount);
+
+                        itemIcon.setText(icon);
+                        itemName.setText(name);
+                        itemPeriod.setText(periodText + " • след. платёж: " + nextPaymentDate);
+                        itemAmount.setText(String.format("%.0f", amount) + " ₽");
+
+                        itemView.setOnLongClickListener(v -> {
                             deleteSubscription(id, name);
                             return true;
                         });
 
-                        llSubscriptions.addView(subView);
+                        llSubscriptions.addView(itemView);
                     }
                 });
+    }
+
+    private String getIconForService(String serviceName) {
+        String lowerName = serviceName.toLowerCase();
+        if (lowerName.contains("netflix")) return "🎬";
+        if (lowerName.contains("spotify")) return "🎵";
+        if (lowerName.contains("youtube")) return "📺";
+        if (lowerName.contains("yandex")) return "🌟";
+        if (lowerName.contains("ivi")) return "🍿";
+        if (lowerName.contains("apple")) return "🍎";
+        return "📱";
     }
 
     private void deleteSubscription(String id, String name) {

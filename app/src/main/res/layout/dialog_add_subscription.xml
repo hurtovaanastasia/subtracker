@@ -42,8 +42,42 @@
             android:id="@+id/dialogEtCustomName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Свой вариант (необязательно)"
+            android:hint="Название сервиса"
             android:layout_marginBottom="16dp"/>
+
+        <!-- Кнопка выбора иконки для своего сервиса -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Иконка"
+                android:textStyle="bold"/>
+
+            <Button
+                android:id="@+id/btnChooseIcon"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Выбрать иконку"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvSelectedIcon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="📱"
+                android:textSize="28sp"
+                android:gravity="center"
+                android:layout_marginStart="8dp"/>
+
+        </LinearLayout>
 
         <EditText
             android:id="@+id/dialogEtAmount"

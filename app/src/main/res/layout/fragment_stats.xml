@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorBackground"
     android:padding="16dp">
 
     <LinearLayout
@@ -15,57 +17,105 @@
             android:text="Статистика"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- Контейнер для самодельной диаграммы -->
-        <LinearLayout
-            android:id="@+id/llPieChart"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@android:drawable/editbox_background"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp"/>
-
-        <TextView
-            android:id="@+id/tvTotalMonth"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ежемесячно: 0 ₽"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tvTotalYear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ежегодно: 0 ₽"
-            android:textSize="18sp"
+            android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="16dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Самый дорогой сервис:"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp"/>
+            card_view:cardCornerRadius="12dp"
+            card_view:cardElevation="4dp"
+            card_view:cardBackgroundColor="?attr/colorSurface"
+            android:layout_marginBottom="16dp">
 
-        <TextView
-            android:id="@+id/tvMostExpensive"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="—"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
+            <LinearLayout
+                android:id="@+id/llPieChart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"/>
 
-        <TextView
-            android:id="@+id/tvMostExpensiveAmount"
-            android:layout_width="wrap_content"
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="—"
-            android:textSize="16sp"/>
+            card_view:cardCornerRadius="12dp"
+            card_view:cardElevation="4dp"
+            card_view:cardBackgroundColor="?attr/colorSurface"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvTotalMonth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ежемесячно: 0 ₽"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/tvTotalYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ежегодно: 0 ₽"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorSecondary"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            card_view:cardCornerRadius="12dp"
+            card_view:cardElevation="4dp"
+            card_view:cardBackgroundColor="?attr/colorSurface"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Самый дорогой сервис"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/tvMostExpensive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvMostExpensiveAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textSize="14sp"
+                    android:textColor="?attr/colorPrimary"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 

@@ -1,128 +1,242 @@
 package com.example.subtracker;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import java.util.*;
 
 public class GuestCalculatorActivity extends AppCompatActivity {
 
-    private EditText etService1, etAmount1, etDate1;
-    private EditText etService2, etAmount2, etDate2;
-    private EditText etService3, etAmount3, etDate3;
-    private TextView tvTotal, tvAnalytics;
-    private Button btnCalculate, btnSave;
+    private RecyclerView rvServices;
+    private CardView cardResult;
+    private TextView tvTotal, tvAnalytics, tvLimitMessage;
+    private Button btnAddService, btnRegister;
+
+    private FirebaseFirestore db;
+    private List<GuestService> servicesList = new ArrayList<>();
+    private List<Service> availableServices = new ArrayList<>();
+    private List<String> serviceNames = new ArrayList<>();
+    private GuestServiceAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_guest_calculator);
 
-        etService1 = findViewById(R.id.etService1);
-        etAmount1 = findViewById(R.id.etAmount1);
-        etDate1 = findViewById(R.id.etDate1);
+        db = FirebaseFirestore.getInstance();
 
-        etService2 = findViewById(R.id.etService2);
-        etAmount2 = findViewById(R.id.etAmount2);
-        etDate2 = findViewById(R.id.etDate2);
-
-        etService3 = findViewById(R.id.etService3);
-        etAmount3 = findViewById(R.id.etAmount3);
-        etDate3 = findViewById(R.id.etDate3);
-
+        rvServices = findViewById(R.id.rvServices);
+        cardResult = findViewById(R.id.cardResult);
         tvTotal = findViewById(R.id.tvTotal);
         tvAnalytics = findViewById(R.id.tvAnalytics);
-        btnCalculate = findViewById(R.id.btnCalculate);
-        btnSave = findViewById(R.id.btnSave);
+        tvLimitMessage = findViewById(R.id.tvLimitMessage);
+        btnAddService = findViewById(R.id.btnAddService);
+        btnRegister = findViewById(R.id.btnRegister);
 
-        btnCalculate.setOnClickListener(v -> calculateTotal());
+        rvServices.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new GuestServiceAdapter(servicesList, position -> deleteService(position));
+        rvServices.setAdapter(adapter);
 
-        btnSave.setOnClickListener(v -> saveAndRegister());
+        btnAddService.setOnClickListener(v -> showAddServiceDialog());
+        btnRegister.setOnClickListener(v -> saveGuestDataAndRegister());
+
+        loadAvailableServices();
+        updateTotal();
     }
 
-    private void calculateTotal() {
+    private void loadAvailableServices() {
+        db.collection("services")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    serviceNames.clear();
+                    availableServices.clear();
+
+                    serviceNames.add("Выберите сервис");
+                    availableServices.add(null);
+
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        String id = doc.getId();
+                        String name = doc.getString("name");
+                        String icon = doc.getString("icon");
+                        Double defaultAmount = doc.getDouble("defaultAmount");
+
+                        Service service = new Service(id, name, icon, defaultAmount);
+                        availableServices.add(service);
+                        serviceNames.add(icon + " " + name);
+                    }
+                });
+    }
+
+    private void showAddServiceDialog() {
+        if (servicesList.size() >= 3) {
+            Toast.makeText(this, "Максимум 3 сервиса в гостевом режиме", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_guest_service, null);
+        builder.setView(view);
+
+        Spinner spinnerService = view.findViewById(R.id.spinnerService);
+        EditText etCustomName = view.findViewById(R.id.etCustomName);
+        EditText etAmount = view.findViewById(R.id.etAmount);
+        DatePicker datePicker = view.findViewById(R.id.datePicker);
+        Button btnCancel = view.findViewById(R.id.btnCancel);
+        Button btnAdd = view.findViewById(R.id.btnAdd);
+
+        Calendar today = Calendar.getInstance();
+        datePicker.updateDate(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+
+        if (!serviceNames.isEmpty()) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, serviceNames);
+            spinnerService.setAdapter(adapter);
+        }
+
+        spinnerService.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                if (position == 0) {
+                    etCustomName.setVisibility(View.VISIBLE);
+                    etAmount.setText("");
+                } else if (position > 0) {
+                    etCustomName.setVisibility(View.GONE);
+                    Service selected = availableServices.get(position);
+                    if (selected != null && selected.getDefaultAmount() != null && etAmount.getText().toString().isEmpty()) {
+                        etAmount.setText(String.valueOf(selected.getDefaultAmount().intValue()));
+                    }
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        AlertDialog dialog = builder.create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnAdd.setOnClickListener(v -> {
+            String name;
+            double amount;
+            String icon = "📱";
+
+            int day = datePicker.getDayOfMonth();
+            int month = datePicker.getMonth() + 1;
+            int year = datePicker.getYear();
+            String startDate = day + "." + month + "." + year;
+
+            int selectedPos = spinnerService.getSelectedItemPosition();
+            if (selectedPos == 0) {
+                name = etCustomName.getText().toString().trim();
+                if (name.isEmpty()) {
+                    Toast.makeText(this, "Введите название сервиса", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } else {
+                Service selected = availableServices.get(selectedPos);
+                if (selected == null) return;
+                name = selected.getName();
+                icon = selected.getIcon();
+                if (icon == null || icon.isEmpty()) icon = "📱";
+            }
+
+            String amountStr = etAmount.getText().toString().trim();
+            if (amountStr.isEmpty()) {
+                Toast.makeText(this, "Введите сумму", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            amount = Double.parseDouble(amountStr);
+
+            servicesList.add(new GuestService(name, amount, startDate, icon));
+            adapter.notifyItemInserted(servicesList.size() - 1);
+            updateTotal();
+            dialog.dismiss();
+
+            if (servicesList.size() >= 3) {
+                btnAddService.setVisibility(View.GONE);
+                tvLimitMessage.setVisibility(View.VISIBLE);
+                btnRegister.setVisibility(View.VISIBLE);
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void deleteService(int position) {
+        servicesList.remove(position);
+        adapter.notifyItemRemoved(position);
+        updateTotal();
+
+        if (servicesList.size() < 3) {
+            btnAddService.setVisibility(View.VISIBLE);
+            tvLimitMessage.setVisibility(View.GONE);
+            btnRegister.setVisibility(View.GONE);
+        }
+
+        if (servicesList.isEmpty()) {
+            cardResult.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateTotal() {
+        if (servicesList.isEmpty()) {
+            cardResult.setVisibility(View.GONE);
+            return;
+        }
+
         double total = 0;
-        StringBuilder analytics = new StringBuilder("Ваши траты:\n");
+        StringBuilder analytics = new StringBuilder();
 
-        if (!etService1.getText().toString().isEmpty()) {
-            double amount1 = parseAmount(etAmount1.getText().toString());
-            total += amount1;
-            analytics.append("• ").append(etService1.getText().toString())
-                    .append(": ").append(amount1).append("₽\n");
+        for (GuestService service : servicesList) {
+            total += service.amount;
+            analytics.append("• ").append(service.name)
+                    .append(": ").append(String.format("%.0f", service.amount))
+                    .append(" ₽ (с ").append(service.startDate).append(")\n");
         }
 
-        if (!etService2.getText().toString().isEmpty()) {
-            double amount2 = parseAmount(etAmount2.getText().toString());
-            total += amount2;
-            analytics.append("• ").append(etService2.getText().toString())
-                    .append(": ").append(amount2).append("₽\n");
-        }
-
-        if (!etService3.getText().toString().isEmpty()) {
-            double amount3 = parseAmount(etAmount3.getText().toString());
-            total += amount3;
-            analytics.append("• ").append(etService3.getText().toString())
-                    .append(": ").append(amount3).append("₽\n");
-        }
-
-        tvTotal.setText("Итого в месяц: " + total + " ₽");
+        tvTotal.setText(String.format("💰 Итого: %.2f ₽", total));
         tvAnalytics.setText(analytics.toString());
+        cardResult.setVisibility(View.VISIBLE);
     }
 
-    private void saveAndRegister() {
-        // Собираем данные гостя
-        List<Map<String, Object>> guestSubscriptions = new ArrayList<>();
-
-        addSubscriptionToList(guestSubscriptions, etService1, etAmount1, etDate1);
-        addSubscriptionToList(guestSubscriptions, etService2, etAmount2, etDate2);
-        addSubscriptionToList(guestSubscriptions, etService3, etAmount3, etDate3);
-
-        if (guestSubscriptions.isEmpty()) {
+    private void saveGuestDataAndRegister() {
+        if (servicesList.isEmpty()) {
             Toast.makeText(this, "Добавьте хотя бы один сервис", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Передаём данные в экран регистрации
-        Intent intent = new Intent(GuestCalculatorActivity.this, RegisterActivity.class);
-
-        // Кладём данные в Intent как строку JSON (простой способ)
-        StringBuilder jsonData = new StringBuilder();
-        for (Map<String, Object> sub : guestSubscriptions) {
-            jsonData.append(sub.get("name")).append("|")
-                    .append(sub.get("amount")).append("|")
-                    .append(sub.get("date")).append(";");
+        StringBuilder guestData = new StringBuilder();
+        for (GuestService service : servicesList) {
+            guestData.append(service.name).append("|")
+                    .append(service.amount).append("|")
+                    .append(service.startDate).append(";");
         }
-        intent.putExtra("guest_data", jsonData.toString());
+
+        Intent intent = new Intent(GuestCalculatorActivity.this, RegisterActivity.class);
+        intent.putExtra("guest_data", guestData.toString());
         startActivity(intent);
     }
 
-    private void addSubscriptionToList(List<Map<String, Object>> list,
-                                       EditText etName, EditText etAmount, EditText etDate) {
-        String name = etName.getText().toString().trim();
-        String amountStr = etAmount.getText().toString().trim();
-        String date = etDate.getText().toString().trim();
+    // Вспомогательный класс для хранения данных сервиса
+    public static class GuestService {
+        String name;
+        double amount;
+        String startDate;
+        String icon;
 
-        if (!name.isEmpty() && !amountStr.isEmpty()) {
-            Map<String, Object> sub = new HashMap<>();
-            sub.put("name", name);
-            sub.put("amount", Double.parseDouble(amountStr));
-            sub.put("date", date.isEmpty() ? "01.01.2025" : date);
-            list.add(sub);
-        }
-    }
-
-    private double parseAmount(String text) {
-        try {
-            return Double.parseDouble(text);
-        } catch (NumberFormatException e) {
-            return 0;
+        public GuestService(String name, double amount, String startDate, String icon) {
+            this.name = name;
+            this.amount = amount;
+            this.startDate = startDate;
+            this.icon = icon;
         }
     }
 }
