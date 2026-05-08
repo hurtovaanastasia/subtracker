@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Гостевой калькулятор"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сервис 1"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/etService1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Название сервиса"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etAmount1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Сумма в месяц (₽)"
+            android:inputType="numberDecimal"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etDate1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Дата платежа (например, 15.01.2025)"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сервис 2"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/etService2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Название сервиса"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etAmount2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Сумма в месяц (₽)"
+            android:inputType="numberDecimal"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etDate2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Дата платежа (например, 15.01.2025)"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Сервис 3"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/etService3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Название сервиса"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etAmount3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Сумма в месяц (₽)"
+            android:inputType="numberDecimal"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etDate3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Дата платежа (например, 15.01.2025)"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnCalculate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Рассчитать"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tvTotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Итого: 0 ₽"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tvAnalytics"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Сохранить и зарегистрироваться"
+            android:backgroundTint="@color/purple_700"/>
+
+    </LinearLayout>
+
+</ScrollView>
